@@ -1,186 +1,255 @@
-# Capstone Project: Mô phỏng và đánh giá cơ chế điều khiển tắc nghẽn trong mạng Data Center cho ứng dụng AI/ML phân tán
+# Nghiên cứu và thiết kế hạ tầng trung tâm dữ liệu cho các ứng dụng AI/ML
 
-## 1. Giới thiệu
+## 1. Giới thiệu đề tài
 
-Repository này được xây dựng phục vụ đồ án tốt nghiệp với định hướng nghiên cứu, mô phỏng và đánh giá các cơ chế điều khiển tắc nghẽn trong hạ tầng mạng trung tâm dữ liệu, đặc biệt đối với các ứng dụng AI/ML phân tán.
+Repository này lưu trữ source code, công cụ tạo workload và môi trường mô phỏng phục vụ đồ án tốt nghiệp với đề tài:
 
-Trong các hệ thống huấn luyện mô hình học sâu hiện đại, nhiều GPU hoặc server cần trao đổi dữ liệu với cường độ lớn trong thời gian ngắn, điển hình là quá trình đồng bộ tham số hoặc gradient thông qua các thuật toán collective communication như All-Reduce. Đặc điểm lưu lượng này có thể tạo ra các đợt burst traffic, làm tăng độ dài hàng đợi tại switch, gây tắc nghẽn, tăng độ trễ, kích hoạt PFC hoặc làm giảm hiệu năng huấn luyện tổng thể.
+**“Nghiên cứu và thiết kế hạ tầng trung tâm dữ liệu cho các ứng dụng AI/ML”**
 
-Đồ án tập trung vào việc xây dựng môi trường mô phỏng dựa trên ASTRA-sim và NS-3 để phân tích hành vi mạng trong các kịch bản AI/ML distributed training, từ đó đánh giá các cơ chế giảm tắc nghẽn như ECN, PFC, DCQCN và các hướng cải tiến liên quan đến điều chỉnh ngưỡng ECN động.
+Đồ án tập trung nghiên cứu hạ tầng mạng trung tâm dữ liệu cho các ứng dụng trí tuệ nhân tạo và học máy phân tán. Trong các hệ thống AI/ML hiện đại, nhiều máy chủ GPU phải trao đổi dữ liệu liên tục trong quá trình huấn luyện. Vì vậy, hạ tầng mạng cần đáp ứng các yêu cầu quan trọng như băng thông cao, độ trễ thấp, hạn chế mất gói và khả năng mở rộng tốt.
 
-## 2. Mục tiêu của đồ án
+Nội dung chính của đồ án gồm nghiên cứu kiến trúc mạng Spine-Leaf, công nghệ truyền dữ liệu tốc độ cao RDMA/RoCEv2 và các cơ chế điều khiển tắc nghẽn trong mạng trung tâm dữ liệu như ECN, PFC, DCQCN, HPCC và TIMELY.
 
-Các mục tiêu chính của đồ án gồm:
+## 2. Thông tin đồ án
 
-* Nghiên cứu đặc điểm lưu lượng mạng trong hệ thống AI/ML phân tán.
-* Tìm hiểu kiến trúc mạng Data Center dạng Spine-Leaf.
-* Phân tích vai trò của RDMA/RoCEv2 trong truyền dữ liệu hiệu năng cao.
-* Mô phỏng quá trình trao đổi dữ liệu giữa nhiều node/GPU bằng ASTRA-sim.
-* Tích hợp backend mạng NS-3 để đánh giá hành vi mạng ở mức gói tin.
-* Khảo sát các cơ chế điều khiển tắc nghẽn như ECN, PFC, DCQCN.
-* Đánh giá các chỉ số như queue length, PFC event, flow completion time và thời gian truyền thông.
-* Đề xuất hướng cải tiến cơ chế đánh dấu ECN động dựa trên trạng thái hàng đợi tại switch.
+* **Sinh viên thực hiện:** Lê Phước Tuyền
+* **Mã số sinh viên:** 106210108
+* **Lớp:** 21DT2
+* **Ngành:** Điện tử Viễn thông
+* **Khoa:** Điện tử Viễn thông
+* **Trường:** Trường Đại học Bách khoa - Đại học Đà Nẵng
+* **Người hướng dẫn:** TS. Trần Thị Minh Hạnh, ThS. Phạm Hoàng Phương
+* **Thời gian:** Đà Nẵng, 6/2026
 
-## 3. Phạm vi nghiên cứu
+## 3. Mục tiêu nghiên cứu
 
-Đồ án tập trung vào môi trường mô phỏng, không triển khai trực tiếp trên phần cứng switch thực tế. Phạm vi chính bao gồm:
+Mục tiêu của đồ án là tìm hiểu và đánh giá hạ tầng mạng phù hợp cho các ứng dụng AI/ML phân tán trong trung tâm dữ liệu. Cụ thể, đồ án tập trung vào các nội dung sau:
 
-* Mô hình mạng Data Center sử dụng kiến trúc Spine-Leaf.
-* Mô phỏng workload AI/ML phân tán bằng ASTRA-sim.
-* Sử dụng NS-3 làm network backend để mô phỏng truyền gói, hàng đợi, buffer và cơ chế điều khiển tắc nghẽn.
-* Đánh giá ảnh hưởng của lưu lượng burst đến hàng đợi switch và hiệu năng truyền thông.
-* Phân tích cơ chế ECN/PFC/DCQCN trong môi trường lossless Ethernet/RDMA.
+* Phân tích đặc điểm lưu lượng mạng trong các hệ thống AI/ML phân tán.
+* Nghiên cứu yêu cầu hạ tầng mạng đối với cụm máy chủ GPU, bao gồm băng thông, độ trễ, mất gói và khả năng mở rộng.
+* So sánh kiến trúc mạng truyền thống ba lớp với kiến trúc Spine-Leaf.
+* Tìm hiểu công nghệ RDMA và RoCEv2 trong truyền dữ liệu tốc độ cao.
+* Phân tích các cơ chế kiểm soát và điều khiển tắc nghẽn gồm ECN, PFC, DCQCN, HPCC và TIMELY.
+* Xây dựng môi trường mô phỏng bằng ASTRA-SIM kết hợp NS-3.
+* Đánh giá hiệu năng truyền dữ liệu giữa TCP/IP và RoCEv2.
+* Đánh giá ảnh hưởng của các cơ chế điều khiển tắc nghẽn thông qua các chỉ số như kích thước hàng đợi, số lượng bản tin PFC và thời gian hoàn thành dòng chảy.
 
-## 4. Cấu trúc thư mục
+## 4. Phạm vi nghiên cứu
+
+Phạm vi nghiên cứu của đồ án là hạ tầng mạng trung tâm dữ liệu phục vụ huấn luyện AI/ML phân tán. Đồ án không triển khai trên phần cứng thực tế mà thực hiện đánh giá thông qua mô phỏng.
+
+Các đối tượng nghiên cứu chính gồm:
+
+* Kiến trúc mạng Spine-Leaf.
+* Giao thức TCP/IP.
+* Công nghệ RDMA/RoCEv2.
+* Cơ chế ECN.
+* Cơ chế PFC.
+* Thuật toán điều khiển tắc nghẽn DCQCN.
+* Thuật toán điều khiển tắc nghẽn HPCC.
+* Thuật toán điều khiển tắc nghẽn TIMELY.
+* Công cụ mô phỏng ASTRA-SIM và NS-3.
+
+## 5. Cấu trúc repository
 
 ```text
 capstone_project/
 ├── core_source_network_ns3/
 │   └── astra-network-ns3/
-│       └── Source code backend mạng NS-3 dùng cho mô phỏng network-level
+│       └── Source code backend mạng NS-3 phục vụ mô phỏng hạ tầng mạng
 │
 ├── create_traffic_workload_AI/
 │   └── collectiveapi/
-│       └── Công cụ và API hỗ trợ tạo workload collective communication cho AI/ML
+│       └── Công cụ hỗ trợ tạo workload giao tiếp tập thể cho AI/ML
 │
 ├── simulation/
 │   └── astra-sim/
-│       └── Bộ mô phỏng ASTRA-sim phục vụ mô phỏng hệ thống AI/ML phân tán
+│       └── Bộ mô phỏng ASTRA-SIM phục vụ mô phỏng hệ thống AI/ML phân tán
 │
 └── README.md
 ```
 
-## 5. Mô tả các thành phần chính
+## 6. Mô tả các thành phần chính
 
-### 5.1. `core_source_network_ns3/astra-network-ns3`
+### 6.1. `core_source_network_ns3/astra-network-ns3`
 
-Thư mục này chứa phần source code backend mạng dựa trên NS-3. Đây là thành phần dùng để mô phỏng chi tiết hành vi mạng ở mức packet-level, bao gồm:
+Thư mục này chứa phần source code backend mạng dựa trên NS-3. Đây là thành phần dùng để mô phỏng hạ tầng mạng ở mức network-level, bao gồm topology, switch, link, hàng đợi, buffer và các cơ chế điều khiển tắc nghẽn.
 
-* Topology mạng Data Center.
-* Link giữa server, leaf switch và spine switch.
-* Hàng đợi tại switch.
-* Buffer và cơ chế quản lý bộ nhớ switch.
-* ECN marking.
-* PFC pause/resume.
-* Cơ chế điều khiển tắc nghẽn như DCQCN.
-* Thu thập các chỉ số mô phỏng như queue length, PFC event và flow completion time.
+Trong đồ án, NS-3 được sử dụng để mô phỏng mạng Spine-Leaf và đánh giá các chỉ số như:
 
-Đây là phần quan trọng để đánh giá tác động của tắc nghẽn mạng đối với workload AI/ML.
+* Kích thước hàng đợi tại switch.
+* Số lượng bản tin PFC.
+* Thời gian hoàn thành dòng chảy.
+* Ảnh hưởng của tắc nghẽn đến quá trình truyền dữ liệu.
 
-### 5.2. `create_traffic_workload_AI/collectiveapi`
+### 6.2. `create_traffic_workload_AI/collectiveapi`
 
-Thư mục này phục vụ quá trình tạo workload giao tiếp cho các ứng dụng AI/ML phân tán. Trong hệ thống huấn luyện phân tán, các node thường trao đổi dữ liệu thông qua các thuật toán collective communication như:
+Thư mục này phục vụ quá trình tạo workload giao tiếp cho các ứng dụng AI/ML phân tán. Trong huấn luyện AI/ML phân tán, các máy chủ GPU thường phải trao đổi dữ liệu thông qua các thao tác giao tiếp tập thể như:
 
-* All-Reduce
-* Broadcast
-* Reduce
-* All-Gather
-* Reduce-Scatter
+* AllReduce
+* AllGather
+* ReduceScatter
+* All-to-All
 
-Workload được tạo ra từ phần này có thể được sử dụng làm đầu vào cho ASTRA-sim nhằm mô phỏng quá trình truyền thông giữa các node/GPU.
+Các workload này được sử dụng làm đầu vào cho ASTRA-SIM để mô phỏng quá trình trao đổi dữ liệu giữa các node trong hệ thống AI/ML.
 
-### 5.3. `simulation/astra-sim`
+### 6.3. `simulation/astra-sim`
 
-Thư mục này chứa ASTRA-sim, bộ mô phỏng hệ thống AI/ML phân tán. ASTRA-sim cho phép mô phỏng các thành phần ở mức hệ thống như:
+Thư mục này chứa ASTRA-SIM, công cụ mô phỏng hệ thống AI/ML phân tán. Trong đồ án, ASTRA-SIM được dùng để tạo và mô phỏng workload AI/ML, sau đó kết hợp với backend mạng NS-3 để đánh giá ảnh hưởng của hạ tầng mạng đến hiệu năng truyền dữ liệu.
+
+ASTRA-SIM giúp mô phỏng các thành phần như:
 
 * Workload AI/ML.
 * Collective communication.
-* Thời gian tính toán của GPU.
-* Thời gian truyền thông giữa các node.
-* Ảnh hưởng của mạng đến hiệu năng huấn luyện.
+* Quá trình truyền dữ liệu giữa các node.
+* Sự kết hợp giữa thời gian tính toán và thời gian truyền thông.
 
-Khi kết hợp với `astra-network-ns3`, ASTRA-sim có thể đánh giá chi tiết tác động của network congestion đến quá trình huấn luyện AI/ML phân tán.
+## 7. Kiến trúc mạng mô phỏng
 
-## 6. Kiến trúc mô phỏng tổng quát
+Topology mạng trong đồ án được xây dựng theo kiến trúc Spine-Leaf. Đây là kiến trúc phù hợp với lưu lượng đông - tây giữa các máy chủ trong trung tâm dữ liệu hiện đại.
 
-Luồng mô phỏng tổng quát của đồ án có thể mô tả như sau:
+Mô hình mô phỏng gồm:
 
-```text
-AI/ML Workload
-      ↓
-Collective Communication
-      ↓
-ASTRA-sim
-      ↓
-NS-3 Network Backend
-      ↓
-Spine-Leaf Data Center Network
-      ↓
-ECN / PFC / DCQCN Evaluation
-      ↓
-Kết quả mô phỏng và phân tích
-```
+| Thành phần                | Giá trị              |
+| ------------------------- | -------------------- |
+| Tổng số node              | 144                  |
+| Máy chủ/GPU node          | 128 node, ID 0–127   |
+| Switch leaf               | 8 switch, ID 128–135 |
+| Switch spine              | 8 switch, ID 136–143 |
+| Tổng số liên kết          | 192                  |
+| Liên kết server–leaf      | 128 link             |
+| Liên kết leaf–spine       | 64 link              |
+| Số server trên mỗi leaf   | 16                   |
+| Số spine kết nối mỗi leaf | 8                    |
+
+Đồ án xây dựng hai trường hợp mạng:
+
+### 7.1. Mô hình có tắc nghẽn
+
+Trong mô hình có tắc nghẽn:
+
+* Liên kết server–leaf: 200 Gbps, độ trễ 0,005 ms.
+* Liên kết leaf–spine: 200 Gbps, độ trễ 0,0125 ms.
+* Tổng downlink mỗi leaf: 16 × 200 = 3200 Gbps.
+* Tổng uplink mỗi leaf: 8 × 200 = 1600 Gbps.
+* Tỷ lệ oversubscription: 2:1.
+
+Với tỷ lệ oversubscription 2:1, khi nhiều server truyền dữ liệu đồng thời, leaf switch có thể trở thành điểm nghẽn.
+
+### 7.2. Mô hình không tắc nghẽn theo lý thuyết
+
+Trong mô hình không tắc nghẽn:
+
+* Liên kết server–leaf: 200 Gbps, độ trễ 0,005 ms.
+* Liên kết leaf–spine: 400 Gbps, độ trễ 0,0125 ms.
+* Tổng downlink mỗi leaf: 16 × 200 = 3200 Gbps.
+* Tổng uplink mỗi leaf: 8 × 400 = 3200 Gbps.
+* Tỷ lệ oversubscription: 1:1.
+
+Với tỷ lệ oversubscription 1:1, tổng băng thông uplink bằng tổng băng thông downlink, do đó mô hình có khả năng hạn chế nghẽn tại leaf tốt hơn.
+
+## 8. Các công nghệ và cơ chế được nghiên cứu
+
+### 8.1. RDMA
+
+RDMA là công nghệ cho phép truyền dữ liệu trực tiếp giữa vùng nhớ của hai máy chủ thông qua card mạng, hạn chế sự tham gia của CPU và giảm số lần sao chép dữ liệu. Công nghệ này phù hợp với các hệ thống cần truyền dữ liệu lớn, độ trễ thấp và thông lượng cao như cụm AI/ML phân tán.
+
+### 8.2. RoCEv2
+
+RoCEv2 là công nghệ triển khai RDMA trên nền Ethernet. RoCEv2 cho phép tận dụng hạ tầng Ethernet phổ biến trong trung tâm dữ liệu nhưng vẫn hỗ trợ truyền dữ liệu hiệu năng cao.
+
+Tuy nhiên, RoCEv2 nhạy cảm với mất gói. Vì vậy, mạng sử dụng RoCEv2 cần được kết hợp với các cơ chế như PFC, ECN và thuật toán điều khiển tắc nghẽn để duy trì hiệu năng ổn định.
+
+### 8.3. ECN
+
+ECN là cơ chế cho phép switch đánh dấu gói tin khi phát hiện dấu hiệu tắc nghẽn thay vì loại bỏ gói tin. Tín hiệu ECN giúp hệ thống phát hiện nghẽn sớm và hỗ trợ phía gửi điều chỉnh tốc độ truyền.
+
+### 8.4. PFC
+
+PFC là cơ chế điều khiển luồng theo mức ưu tiên. Khi hàng đợi tại switch tăng cao và có nguy cơ tràn buffer, switch có thể gửi bản tin PFC để yêu cầu phía gửi tạm dừng truyền dữ liệu đối với một mức ưu tiên nhất định.
+
+PFC giúp hạn chế mất gói trong mạng RoCEv2, nhưng nếu bị kích hoạt quá nhiều có thể làm tăng độ trễ và ảnh hưởng đến hiệu năng toàn mạng.
+
+### 8.5. DCQCN
+
+DCQCN là cơ chế điều khiển tắc nghẽn phù hợp với mạng RoCEv2. Cơ chế này sử dụng ECN để phát hiện tắc nghẽn, CNP để phản hồi thông tin nghẽn và điều chỉnh tốc độ truyền tại phía gửi.
+
+Trong đồ án, DCQCN được tập trung đánh giá vì có tính thực tế khi triển khai trong mạng RoCEv2 và có khả năng kiểm soát tắc nghẽn tốt.
+
+### 8.6. HPCC
+
+HPCC là cơ chế điều khiển tắc nghẽn có độ chính xác cao, sử dụng thông tin In-band Network Telemetry để thu thập trạng thái mạng trực tiếp. HPCC có khả năng phản ứng nhanh và đạt hiệu năng tốt, tuy nhiên yêu cầu thiết bị mạng hỗ trợ telemetry nên phức tạp hơn khi triển khai.
+
+### 8.7. TIMELY
+
+TIMELY là cơ chế điều khiển tắc nghẽn dựa trên độ trễ khứ hồi RTT. Cơ chế này đơn giản hơn so với HPCC, nhưng có thể phản ứng chậm hơn trong các workload AI/ML có lưu lượng burst và thay đổi nhanh.
+
+## 9. Kịch bản mô phỏng
+
+Đồ án thực hiện mô phỏng bằng cách kết hợp ASTRA-SIM và NS-3.
 
 Trong đó:
 
-* ASTRA-sim mô phỏng quá trình huấn luyện và trao đổi dữ liệu giữa các node.
-* NS-3 mô phỏng mạng truyền thông bên dưới.
-* Switch trong mô phỏng xử lý hàng đợi, buffer, ECN marking và PFC.
-* Kết quả đầu ra được dùng để đánh giá mức độ tắc nghẽn và hiệu quả của cơ chế điều khiển tắc nghẽn.
+* ASTRA-SIM dùng để mô phỏng workload AI/ML.
+* NS-3 dùng để mô phỏng hạ tầng mạng Spine-Leaf.
+* Workload sử dụng gồm tác vụ AllReduce và mô hình khuyến nghị học sâu DLRM.
+* Các kịch bản tập trung so sánh TCP/IP với RoCEv2 và đánh giá các cơ chế điều khiển tắc nghẽn DCQCN, HPCC và TIMELY.
 
-## 7. Các cơ chế mạng được nghiên cứu
+Luồng mô phỏng tổng quát:
 
-### 7.1. ECN - Explicit Congestion Notification
+```text
+AI/ML workload
+        ↓
+ASTRA-SIM
+        ↓
+NS-3 network backend
+        ↓
+Spine-Leaf topology
+        ↓
+TCP/IP hoặc RoCEv2
+        ↓
+ECN / PFC / DCQCN / HPCC / TIMELY
+        ↓
+Kết quả mô phỏng
+```
 
-ECN là cơ chế cho phép switch đánh dấu gói tin khi phát hiện dấu hiệu tắc nghẽn thay vì drop gói ngay lập tức. Khi phía nhận phát hiện gói có dấu ECN, nó có thể gửi phản hồi về phía gửi để giảm tốc độ truyền.
+## 10. Các chỉ số đánh giá
 
-Trong đồ án, ECN được xem là tín hiệu cảnh báo sớm giúp hạn chế queue tăng quá cao.
+Các chỉ số chính được sử dụng để đánh giá hiệu năng trong đồ án gồm:
 
-### 7.2. PFC - Priority Flow Control
+| Chỉ số                        | Ý nghĩa                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| Thông lượng                   | Đánh giá khả năng truyền dữ liệu của mạng                                |
+| Độ trễ                        | Đánh giá thời gian truyền dữ liệu giữa các node                          |
+| Kích thước hàng đợi           | Phản ánh mức độ tắc nghẽn tại switch                                     |
+| Số lượng bản tin PFC          | Cho biết mức độ thường xuyên switch phải tạm dừng luồng để tránh mất gói |
+| Flow Completion Time          | Thời gian hoàn thành dòng chảy                                           |
+| Thời gian hoàn thành workload | Đánh giá ảnh hưởng của mạng đến toàn bộ quá trình truyền thông AI/ML     |
 
-PFC là cơ chế pause theo từng priority, thường được sử dụng trong môi trường lossless Ethernet để hạn chế mất gói đối với lưu lượng RDMA/RoCEv2.
+## 11. Kết quả đánh giá chính
 
-Tuy nhiên, nếu PFC bị kích hoạt quá nhiều, hệ thống có thể gặp các vấn đề như tăng độ trễ, lan truyền nghẽn hoặc ảnh hưởng đến hiệu năng tổng thể.
+Kết quả mô phỏng trong đồ án cho thấy:
 
-### 7.3. DCQCN - Data Center Quantized Congestion Notification
+* RoCEv2 phù hợp hơn TCP/IP trong môi trường truyền dữ liệu tốc độ cao cho AI/ML phân tán.
+* DCQCN có khả năng kiểm soát tắc nghẽn tốt và thực tế khi triển khai trong mạng RoCEv2.
+* HPCC đạt hiệu năng tốt nhờ sử dụng telemetry để thu thập trạng thái mạng trực tiếp, nhưng yêu cầu thiết bị mạng hỗ trợ phức tạp hơn.
+* TIMELY có cơ chế đơn giản hơn vì dựa trên RTT, nhưng có thể phản ứng chậm với lưu lượng thay đổi nhanh.
+* Trong workload DLRM, HPCC đạt thời gian hoàn thành trung bình tốt nhất, DCQCN có hiệu năng gần với HPCC, còn TIMELY có thời gian hoàn thành lớn hơn.
+* Việc sử dụng topology Spine-Leaf với tỷ lệ oversubscription phù hợp giúp hạn chế nghẽn tại leaf switch và cải thiện hiệu năng truyền dữ liệu.
 
-DCQCN là cơ chế điều khiển tắc nghẽn thường được sử dụng cho RoCEv2 trong Data Center. Cơ chế này kết hợp:
+## 12. Ý nghĩa thực tiễn
 
-* ECN marking tại switch.
-* CNP phản hồi từ phía nhận.
-* Điều chỉnh tốc độ gửi tại RNIC của sender.
+Đồ án có ý nghĩa trong việc nghiên cứu và đánh giá hạ tầng mạng cho các trung tâm dữ liệu phục vụ AI/ML phân tán. Khi số lượng GPU tăng lên, lưu lượng trao đổi giữa các máy chủ ngày càng lớn, đặc biệt trong các thao tác đồng bộ dữ liệu như AllReduce.
 
-DCQCN giúp giảm tốc độ truyền trước khi hàng đợi tăng quá cao, từ đó hạn chế PFC và cải thiện hiệu năng truyền thông.
+Việc lựa chọn kiến trúc Spine-Leaf, sử dụng RoCEv2 và triển khai các cơ chế điều khiển tắc nghẽn phù hợp giúp:
 
-### 7.4. Hướng cải tiến ECN động
+* Giảm nguy cơ tắc nghẽn trong mạng.
+* Hạn chế mất gói đối với lưu lượng RDMA.
+* Giảm thời gian chờ giữa các GPU.
+* Cải thiện hiệu quả truyền dữ liệu trong huấn luyện AI/ML phân tán.
+* Làm cơ sở cho việc thiết kế cụm máy chủ GPU trong trung tâm dữ liệu hiện đại.
 
-Bên cạnh cơ chế ECN tĩnh, đồ án định hướng nghiên cứu điều chỉnh ngưỡng ECN động dựa trên trạng thái hàng đợi tại switch. Ý tưởng chính là:
-
-* Khi hàng đợi có xu hướng tăng cao, giảm ngưỡng ECN để đánh dấu sớm hơn.
-* Khi hàng đợi thấp và mạng ổn định, nới ngưỡng ECN để tránh đánh dấu không cần thiết.
-* Sử dụng thông tin queue hiện tại hoặc giá trị trung bình EWMA để phản ánh xu hướng tắc nghẽn.
-* Hạn chế kích hoạt PFC bằng cách phản ứng sớm trước khi queue vượt ngưỡng nguy hiểm.
-
-## 8. Các chỉ số đánh giá
-
-Đồ án sử dụng các chỉ số chính sau để phân tích hiệu năng:
-
-| Chỉ số                   | Ý nghĩa                                       |
-| ------------------------ | --------------------------------------------- |
-| Queue Length             | Độ dài hàng đợi tại switch theo thời gian     |
-| PFC Count                | Số lần switch gửi tín hiệu pause              |
-| PFC Duration             | Thời gian pause do PFC gây ra                 |
-| Flow Completion Time     | Thời gian hoàn thành truyền dữ liệu của flow  |
-| Communication Time       | Thời gian truyền thông giữa các node          |
-| GPU Cycle / Compute Time | Thời gian tính toán hoặc chu kỳ xử lý của GPU |
-| Link Utilization         | Mức sử dụng băng thông trên các liên kết      |
-| Packet Drop              | Số lượng gói bị drop nếu có                   |
-
-Các chỉ số này giúp đánh giá cơ chế điều khiển tắc nghẽn có làm giảm queue, giảm PFC và cải thiện thời gian truyền thông hay không.
-
-## 9. Môi trường thực hiện
-
-Môi trường khuyến nghị:
-
-* Hệ điều hành: Ubuntu hoặc Ubuntu trên WSL
-* Công cụ quản lý mã nguồn: Git
-* Ngôn ngữ chính: C++, Python, C, Shell
-* Mô phỏng mạng: NS-3
-* Mô phỏng hệ thống AI/ML: ASTRA-sim
-* Trình biên dịch: GCC/G++
-* Công cụ build: CMake, Make
-
-## 10. Hướng dẫn clone repository
+## 13. Hướng dẫn clone repository
 
 ```bash
 git clone https://github.com/Lephuoctuyen/capstone_project.git
@@ -202,96 +271,6 @@ simulation
 README.md
 ```
 
-## 11. Hướng dẫn sử dụng tổng quát
+## 14. Ghi chú
 
-### Bước 1: Chuẩn bị workload AI/ML
-
-Di chuyển vào thư mục tạo workload:
-
-```bash
-cd create_traffic_workload_AI/collectiveapi
-```
-
-Tại đây, người dùng có thể tạo hoặc chỉnh sửa các workload collective communication phục vụ mô phỏng AI/ML phân tán.
-
-### Bước 2: Chuẩn bị ASTRA-sim
-
-Di chuyển vào thư mục ASTRA-sim:
-
-```bash
-cd ../../simulation/astra-sim
-```
-
-Thành phần này được dùng để mô phỏng quá trình huấn luyện phân tán và liên kết với backend mạng.
-
-### Bước 3: Chuẩn bị backend mạng NS-3
-
-Di chuyển vào thư mục network backend:
-
-```bash
-cd ../../core_source_network_ns3/astra-network-ns3
-```
-
-Thành phần này mô phỏng mạng Data Center, bao gồm topology, switch, queue, buffer và cơ chế điều khiển tắc nghẽn.
-
-### Bước 4: Chạy mô phỏng
-
-Tùy theo cấu hình cụ thể của từng kịch bản, người dùng cần thiết lập:
-
-* File topology mạng.
-* File workload AI/ML.
-* Tham số băng thông link.
-* Tham số độ trễ link.
-* Cơ chế điều khiển tắc nghẽn.
-* Thời gian mô phỏng.
-* Các file output cần thu thập.
-
-Sau khi cấu hình xong, tiến hành build và chạy mô phỏng theo hướng dẫn tương ứng trong từng thư mục thành phần.
-
-## 12. Kết quả đầu ra mong muốn
-
-Sau khi chạy mô phỏng, các kết quả có thể bao gồm:
-
-```text
-queue_length_result.txt
-pfc_result.txt
-fct_result.txt
-simulation_trace.tr
-communication_time_result.txt
-```
-
-Các file này được dùng để vẽ biểu đồ và phân tích hiệu năng mạng trong từng kịch bản.
-
-## 13. Ý nghĩa thực tiễn của đồ án
-
-Đồ án có ý nghĩa trong bối cảnh các Data Center hiện đại ngày càng phải phục vụ các workload AI/ML có lưu lượng lớn, thời gian truyền ngắn và yêu cầu hiệu năng cao. Việc mô phỏng và đánh giá các cơ chế điều khiển tắc nghẽn giúp:
-
-* Hiểu rõ nguyên nhân gây nghẽn trong mạng Data Center.
-* Đánh giá vai trò của ECN, PFC và DCQCN.
-* Phân tích ảnh hưởng của buffer và queue đến hiệu năng truyền thông.
-* Hỗ trợ thiết kế chính sách điều khiển tắc nghẽn phù hợp hơn cho workload AI/ML.
-* Làm cơ sở cho các hướng nghiên cứu tiếp theo về Dynamic ECN, Dynamic Load Balancing hoặc tối ưu hóa mạng RDMA/RoCEv2.
-
-## 14. Định hướng phát triển tiếp theo
-
-Một số hướng có thể tiếp tục phát triển:
-
-* Hoàn thiện cơ chế điều chỉnh ngưỡng ECN động dựa trên EWMA queue.
-* So sánh chi tiết giữa DCQCN, DCTCP, TIMELY và HPCC.
-* Tích hợp cơ chế Dynamic Load Balancing dựa trên độ dài hàng đợi.
-* Tối ưu tham số PFC để hạn chế pause storm và head-of-line blocking.
-* Mở rộng topology Spine-Leaf với số lượng node lớn hơn.
-* Tạo thêm workload AI/ML đa dạng hơn, ví dụ nhiều kích thước message và nhiều kiểu collective khác nhau.
-* Tự động hóa quá trình chạy mô phỏng và vẽ biểu đồ kết quả.
-
-## 15. Tác giả
-
-Sinh viên thực hiện: **Lê Phước Tuyền**
-
-Đề tài: **Nghiên cứu cơ chế điều khiển tắc nghẽn và thiết kế hạ tầng mạng Data Center cho các ứng dụng AI/ML phân tán**
-
-Mục đích repository: Lưu trữ source code, workload, môi trường mô phỏng và các thành phần phục vụ đồ án tốt nghiệp.
-
-## 16. Ghi chú
-
-Repository này được xây dựng với mục đích học thuật và nghiên cứu. Các kết quả mô phỏng phụ thuộc vào cấu hình topology, workload, tham số mạng và cơ chế điều khiển tắc nghẽn được sử dụng trong từng kịch bản.
+Repository này được xây dựng phục vụ mục đích học thuật, nghiên cứu và mô phỏng trong khuôn khổ đồ án tốt nghiệp. Các kết quả mô phỏng phụ thuộc vào cấu hình topology, workload, tham số liên kết, cơ chế điều khiển tắc nghẽn và môi trường thực nghiệm được sử dụng.
