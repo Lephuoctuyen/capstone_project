@@ -1,0 +1,3 @@
+[submodule "msccl-tools"]
+	path = msccl-tools
+	url = git@github.com:jinsun-yoo/msccl-tools.git
